@@ -1,5 +1,10 @@
 # GAT / GCN
 Pytorch Implementations of Graph Attention Network and Graph Convolution Network
+![image](https://user-images.githubusercontent.com/37788686/97774053-18346d00-1b98-11eb-91d1-af98189df894.png)
+
+## What is the GAT and GCN
+Most machine learning algorithms assume that input data exists in Euclidean space. But data such as relationships between objects, social networks, relational databases, molecular structures, etc., are basically graphically represented. GCN(Graph Convolutional Network) and GAT(Graph Attention Network) is used in these graphical data.
+
 
 ## Results
 
