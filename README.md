@@ -48,6 +48,61 @@ GAT shows higher performance than GCN.
 ### SpGAT
 `python3 train.py --model spgat`
 
+## Code Explanation
+* layer.py
+```python
+class GraphConvolutionLayer(nn.Module):
+    def __init__(self, in_features, out_features, dropout):
+        super(GraphConvolutionLayer, self).__init__()
+        self.weight = nn.Parameter(torch.FloatTensor(in_features, out_features))
+        self.dropout = nn.Dropout(p=dropout)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        init.kaiming_uniform_(self.weight)
+
+    def forward(self, input, adj):  # AXW
+        output = torch.mm(input, self.weight)  # [N, hidden dim]
+        output = torch.mm(adj, output)  # [N, hidden dim]
+        output = self.dropout(output)
+        return output
+```
+GraphConvolutionLayer is similar with CNN. This takes feature matrix and computes like convolution layer. torch.mm() is matrix multiply function. In pytorch library, CNN is implemented by torch.mm().
+```python
+class GraphAttentionLayer(nn.Module):
+    """multihead attention """
+
+    def __init__(self, in_features, out_features, dropout, alpha, concat=True):
+        super(GraphAttentionLayer, self).__init__()
+        self.out_features = out_features
+        self.dropout = dropout
+        self.concat = concat
+        self.linear = nn.Linear(in_features, out_features)
+        self.attn = nn.Linear(out_features * 2, 1)
+        self.leaky = nn.LeakyReLU(alpha)
+
+    def forward(self, input, adj):
+        N = input.size(0)
+        h = self.linear(input)
+        concated = torch.cat([h.repeat(1, N).view(N * N, -1), h.repeat(N, 1)], dim=-1).view(N, N, self.out_features * 2)
+
+        energy = self.attn(concated).squeeze(-1)
+        energy = self.leaky(energy)
+        zero_vec = -9e15 * torch.ones_like(energy)
+        masked = torch.where(adj > 0, energy, zero_vec)
+        masked_attn_score = F.softmax(masked, -1)
+        masked_attn_score = F.dropout(masked_attn_score, p=self.dropout, training=self.training)
+
+        h_prime = torch.matmul(masked_attn_score, h)
+
+        if self.concat:
+            return F.elu(h_prime)
+        else:
+            return h_prime
+```
+GraphAttentionLayer is GraphConvolutionLayer+Attention. I implements attention as Bahdanau attention(using FC). I uses mask to select only adjacent nodes at each node.
+
 ## References
 [1] [Graph Attention Network](https://arxiv.org/pdf/1710.10903.pdf)  
 
