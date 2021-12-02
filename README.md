@@ -21,7 +21,7 @@ Overview of GAT.
 | spGCN | 17s | 1.602 | 58.3% |
 | spGAT | 1m47s | 1.1591 | 59.2% | 
 
-GAT shows higher performance than GCN.
+GAT achieves better performances compared to GCN.
 
 ## Usage
 `python3 train.py --model {gcn, gat, spgcn, spgat}`
